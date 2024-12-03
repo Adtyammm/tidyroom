@@ -104,6 +104,7 @@ const Book = () => {
           nim: userInfo.nim,
           price: selectedData.price,
           status: "pending",
+          progress: "Menuju Konfirmasi",
           userId: userInfo.id,
           userIdAngel: selectedData.id,
           createdAt: new Date(),
@@ -157,7 +158,13 @@ const Book = () => {
                   className="grid grid-cols-5 gap-4 items-center py-6"
                 >
                   <div className="flex items-center gap-4 pl-4">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+                    <div className="overflow-hidden w-20 h-20 rounded-full">
+                      <img
+                        src={`http://localhost:5000/images/${angel.image}`}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                     <span className="text-xl font-medium text-[#074B5D]">
                       {angel.username}
                     </span>

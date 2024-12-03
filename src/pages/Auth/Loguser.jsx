@@ -38,7 +38,7 @@ const Loginuser = () => {
         console.log("No user document found in Firestore.");
       }
 
-      navigate("/"); // Arahkan ke halaman utama setelah login berhasil
+      navigate("/home-user"); // Arahkan ke halaman utama setelah login berhasil
     } catch (error) {
       console.error("Login Gagal:", error);
       setErrorMessage("Login gagal: Email atau Password salah.");

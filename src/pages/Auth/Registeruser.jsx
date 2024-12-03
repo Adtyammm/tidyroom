@@ -74,7 +74,7 @@ const Registeruser = () => {
         style={{ backgroundImage: `url(${backgroundImage})` }}
       ></div>
       <div className="w-2/3 flex flex-col justify-center items-center bg-[#033543] p-12">
-        <div className="bg-[#F3E2CE] p-10 rounded-lg shadow-2xl w-3/5 h-full">
+        <div className="bg-[#F3E2CE] p-10 rounded-lg shadow-2xl w-3/5 h-10/12 ">
           <div className="mb-6">
             <img
               src={loginIcon}

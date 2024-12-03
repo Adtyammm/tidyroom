@@ -32,7 +32,7 @@ const Home = () => {
             data-aos-duration="2000"
             className="text-white text-4xl font-semibold mt-20"
           >
-            TinyRoom: Layanan Bersih Kamar Kost untuk Mahasiswa
+            TidyRoom: Layanan Bersih Kamar Kost untuk Mahasiswa
           </h1>
           <p
             data-aos="fade-up"

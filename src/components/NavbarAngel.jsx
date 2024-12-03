@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import logo from "../assets/tidyroom.png";
 
-const Navbar = () => {
+const NavbarAngel = () => {
   const [user, setUser] = useState(null);
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ const Navbar = () => {
                 <Menu.Item>
                   {({ active }) => (
                     <Link
-                      to="/profile"
+                      to="/profile-angel"
                       className={`${
                         active
                           ? "bg-gradient-to-r from-green-400 to-green-500 text-white"
@@ -98,21 +98,6 @@ const Navbar = () => {
                     >
                       <UserIcon className="w-5 h-5 mr-2" />
                       Profile
-                    </Link>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <Link
-                      to="/settings"
-                      className={`${
-                        active
-                          ? "bg-gradient-to-r from-blue-400 to-blue-500 text-white"
-                          : "text-gray-700"
-                      } flex items-center px-4 py-2 text-sm rounded-md transition-colors duration-150`}
-                    >
-                      <Cog6ToothIcon className="w-5 h-5 mr-2" />
-                      Settings
                     </Link>
                   )}
                 </Menu.Item>
@@ -147,4 +132,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default NavbarAngel;

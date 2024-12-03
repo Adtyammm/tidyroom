@@ -57,7 +57,7 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center space-x-4 text-3xl font-bold mr-12 gap-6">
-        <Link to="/" className="text-dark-green hover:text-gray-600">
+        <Link to="/home-user" className="text-dark-green hover:text-gray-600">
           Home
         </Link>
         <Link to="/book" className="text-dark-green hover:text-gray-600">
@@ -101,21 +101,7 @@ const Navbar = () => {
                     </Link>
                   )}
                 </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <Link
-                      to="/settings"
-                      className={`${
-                        active
-                          ? "bg-gradient-to-r from-blue-400 to-blue-500 text-white"
-                          : "text-gray-700"
-                      } flex items-center px-4 py-2 text-sm rounded-md transition-colors duration-150`}
-                    >
-                      <Cog6ToothIcon className="w-5 h-5 mr-2" />
-                      Settings
-                    </Link>
-                  )}
-                </Menu.Item>
+
                 <Menu.Item>
                   {({ active }) => (
                     <button

@@ -8,6 +8,8 @@ import {
   X,
   Info,
   User,
+  Calendar,
+  Search,
 } from "lucide-react";
 import { db, auth } from "../../config/Firebase";
 import {
@@ -18,6 +20,7 @@ import {
   query,
   where,
   onSnapshot,
+  serverTimestamp,
 } from "firebase/firestore";
 import moment from "moment";
 
@@ -25,10 +28,11 @@ const WorkPage = () => {
   const [activeTab, setActiveTab] = useState("ongoing");
   const [isAvailable, setIsAvailable] = useState(false);
   const [userId, setUserId] = useState(null);
-  const [ongoingWorks, setOngoingWorks] = useState([]); // Data Pekerjaan Aktif
+  const [ongoingWorks, setOngoingWorks] = useState([]);
+  const [historyWorks, setHistoryWorks] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    // Mendapatkan userId saat ini dan status kerja dari Firestore
     const fetchStatus = async () => {
       const user = auth.currentUser;
       if (user) {
@@ -36,15 +40,15 @@ const WorkPage = () => {
         const userDocRef = doc(db, "tidyangel", user.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
-          setIsAvailable(userDoc.data().status || false); // Mengatur status awal dari Firestore
+          setIsAvailable(userDoc.data().status || false);
         }
       }
     };
     fetchStatus();
   }, []);
 
+  // Fetch Ongoing Works
   useEffect(() => {
-    // Fetch data booking dengan status 'accepted'
     if (userId) {
       const q = query(
         collection(db, "book"),
@@ -57,7 +61,6 @@ const WorkPage = () => {
           snapshot.docs.map(async (docSnapshot) => {
             const bookingData = docSnapshot.data();
 
-            // Mendapatkan data pengguna dari tidyuser berdasarkan userId
             const userRef = doc(db, "tidyuser", bookingData.userId);
             const userSnap = await getDoc(userRef);
             const fullname = userSnap.exists()
@@ -68,21 +71,21 @@ const WorkPage = () => {
               : "Unknown Address";
             const nim = userSnap.exists() ? userSnap.data().nim : "Unknown NIM";
 
-            // Mendapatkan data angel dari tidyangel berdasarkan userIdAngel
             const angelRef = doc(db, "tidyangel", bookingData.userIdAngel);
             const angelSnap = await getDoc(angelRef);
             const workHours = angelSnap.exists()
-              ? angelSnap.data().work_hours
+              ? angelSnap.data().workHours
               : "Unknown Hours";
             const price = angelSnap.exists()
               ? angelSnap.data().price
               : "Unknown Price";
 
-            // Hitung durasi sejak accepted
-            const acceptedAt = bookingData.acceptedAt?.toDate(); // assuming acceptedAt is set in Firestore
+            const acceptedAt = bookingData.acceptedAt?.toDate();
             const duration = acceptedAt
               ? moment().diff(moment(acceptedAt), "hours")
               : null;
+
+            const progress = bookingData.progress || "Sedang menuju lokasi";
 
             return {
               id: docSnapshot.id,
@@ -93,13 +96,48 @@ const WorkPage = () => {
               price,
               duration,
               status: bookingData.status,
+              progress, // Progress added here
             };
           })
         );
         setOngoingWorks(works);
       });
 
-      // Cleanup listener
+      return () => unsubscribe();
+    }
+  }, [userId]);
+
+  // Fetch History Works
+  useEffect(() => {
+    if (userId) {
+      const q = query(
+        collection(db, "book"),
+        where("userIdAngel", "==", userId),
+        where("status", "==", "complete")
+      );
+
+      const unsubscribe = onSnapshot(q, async (snapshot) => {
+        const works = await Promise.all(
+          snapshot.docs.map(async (docSnapshot) => {
+            const bookingData = docSnapshot.data();
+            const userRef = doc(db, "tidyuser", bookingData.userId);
+            const userSnap = await getDoc(userRef);
+
+            return {
+              id: docSnapshot.id,
+              date: bookingData.createdAt?.toDate(),
+              fullname: userSnap.exists()
+                ? userSnap.data().fullname
+                : "Unknown User",
+              nim: userSnap.exists() ? userSnap.data().nim : "Unknown NIM",
+              status: bookingData.status,
+              completedAt: bookingData.completedAt?.toDate(),
+            };
+          })
+        );
+        setHistoryWorks(works);
+      });
+
       return () => unsubscribe();
     }
   }, [userId]);
@@ -108,7 +146,6 @@ const WorkPage = () => {
     const newStatus = !isAvailable;
     setIsAvailable(newStatus);
 
-    // Memperbarui status di Firestore
     if (userId) {
       const userDocRef = doc(db, "tidyangel", userId);
       await updateDoc(userDocRef, {
@@ -117,18 +154,54 @@ const WorkPage = () => {
     }
   };
 
-  // Handle completion of the booking
+  const handleProgress = async (booking) => {
+    try {
+      const bookingRef = doc(db, "book", booking.id);
+
+      let newProgress;
+      if (booking.progress === "Menuju Konfirmasi") {
+        newProgress = "Sedang Menuju Lokasi";
+      } else if (booking.progress === "Sedang Menuju Lokasi") {
+        newProgress = "Sudah sampai di lokasi dan sedang dikerjakan";
+      } else {
+        newProgress = "Sudah Selesai";
+      }
+
+      // Update progress di Firestore
+      await updateDoc(bookingRef, {
+        progress: newProgress,
+      });
+
+      // Perbarui status dalam UI
+      setOngoingWorks((prevWorks) =>
+        prevWorks.map((work) =>
+          work.id === booking.id ? { ...work, progress: newProgress } : work
+        )
+      );
+    } catch (error) {
+      console.error("Error updating progress:", error);
+    }
+  };
+
   const handleComplete = async (booking) => {
     try {
       const bookingRef = doc(db, "book", booking.id);
-      await updateDoc(bookingRef, { status: "complete" });
+      await updateDoc(bookingRef, {
+        status: "complete",
+        completedAt: serverTimestamp(),
+      });
 
-      // Update ongoingWorks to remove the completed booking
       setOngoingWorks((prev) => prev.filter((b) => b.id !== booking.id));
     } catch (error) {
       console.error("Error completing booking:", error);
     }
   };
+
+  const filteredHistory = historyWorks.filter(
+    (work) =>
+      work.fullname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      work.nim.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <>
@@ -199,7 +272,7 @@ const WorkPage = () => {
           </button>
         </div>
 
-        {/* Content Section - Ongoing Works */}
+        {/* Content Section */}
         <div className="bg-[#B5C7D3] bg-opacity-80 rounded-2xl p-8 shadow-2xl">
           {activeTab === "ongoing" ? (
             <div className="space-y-4">
@@ -213,11 +286,7 @@ const WorkPage = () => {
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
                           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <img
-                              src="/path/to/customer/avatar.jpg"
-                              alt=""
-                              className="w-8 h-8 rounded-full"
-                            />
+                            <User className="w-6 h-6 text-blue-500" />
                           </div>
                           <div>
                             <h3 className="font-medium text-lg">
@@ -237,22 +306,16 @@ const WorkPage = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <DollarSign size={18} />
-                            <span>{work.price} /jam</span>
+                            <span>{work.price} / jam</span>
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button className="p-2 hover:bg-gray-100 rounded-lg">
-                          <Info size={24} className="text-blue-500" />
-                        </button>
                         <button
                           onClick={() => handleComplete(work)}
                           className="p-2 hover:bg-gray-100 rounded-lg"
                         >
-                          <CheckCircle size={24} className="text-green-500" />
-                        </button>
-                        <button className="p-2 hover:bg-gray-100 rounded-lg">
-                          <X size={24} className="text-red-500" />
+                          <CheckCircle size={34} className="text-green-500" />
                         </button>
                       </div>
                     </div>
@@ -260,30 +323,105 @@ const WorkPage = () => {
                     <div className="mt-4">
                       <div className="flex justify-between text-sm mb-1">
                         <span>Progress</span>
-                        <span>
-                          {work.duration
-                            ? `${work.duration} jam tersisa`
-                            : "Waktu tidak tersedia"}
-                        </span>
+                        <span>{work.progress}</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
                           className="bg-blue-500 h-2 rounded-full"
-                          style={{ width: `${(work.duration / 2) * 100}%` }}
+                          style={{ width: "100%" }}
                         ></div>
                       </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-6">
+                      <button
+                        onClick={() => handleProgress(work)}
+                        className="p-2 hover:bg-gray-100 rounded-lg"
+                      >
+                        <CheckCircle size={34} className="text-green-500" />
+                      </button>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center text-gray-500">
-                  No active bookings.
+                <div className="text-center py-10 text-gray-500">
+                  Tidak ada pekerjaan aktif saat ini.
                 </div>
               )}
             </div>
           ) : (
-            <div className="bg-[#FFE6C9] rounded-xl overflow-hidden shadow-lg">
-              {/* History Table (add here if needed) */}
+            // History Section
+            <div className="space-y-6">
+              {/* Search Bar */}
+              <div className="flex items-center gap-4 bg-white rounded-lg p-2 w-full max-w-md">
+                <Search className="text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="Cari berdasarkan nama atau NIM..."
+                  className="flex-1 outline-none text-gray-700"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              {/* History Table */}
+              <div className="bg-white rounded-xl overflow-hidden shadow-lg">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-[#074B5D] to-[#137185] text-white">
+                      <th className="py-4 px-6 text-left">Tanggal</th>
+                      <th className="py-4 px-6 text-left">Nama</th>
+                      <th className="py-4 px-6 text-left">NIM</th>
+                      <th className="py-4 px-6 text-left">Status</th>
+                      <th className="py-4 px-6 text-left">Selesai Pada</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredHistory.map((work) => (
+                      <tr
+                        key={work.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-2">
+                            <Calendar size={16} className="text-gray-400" />
+                            {moment(work.date).format("DD MMM YYYY")}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-2">
+                            <User size={16} className="text-gray-400" />
+                            {work.fullname}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 text-gray-500">{work.nim}</td>
+                        <td className="py-4 px-6">
+                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            {work.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-gray-500">
+                          {moment(work.completedAt).format(
+                            "DD MMM YYYY, HH:mm"
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Empty State */}
+                {filteredHistory.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="mb-2">Tidak ada riwayat ditemukan</div>
+                    {searchTerm && (
+                      <div className="text-sm">
+                        Coba sesuaikan kata kunci pencarian
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
