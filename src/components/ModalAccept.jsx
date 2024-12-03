@@ -46,7 +46,7 @@ const AcceptModal = ({ isOpen, onClose, booking }) => {
                 as="h3"
                 className="text-2xl font-medium leading-6 text-gray-900 text-center"
               >
-                Booking Accepted
+                Booking Accepted!
               </Dialog.Title>
               <div className="mt-4">
                 <p className="text-lg text-gray-500 text-center">
