@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import logo from "../assets/tidyroom.png";
 
-const Navbar = () => {
+const NavbarHome = () => {
   const [user, setUser] = useState(null);
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
@@ -57,13 +57,6 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center space-x-4 text-3xl font-bold mr-12 gap-6">
-        <Link to="/home-user" className="text-dark-green hover:text-gray-600">
-          Home
-        </Link>
-        <Link to="/book" className="text-dark-green hover:text-gray-600">
-          Book
-        </Link>
-
         {user ? (
           <Menu as="div" className="relative inline-block text-left">
             <Menu.Button className="text-dark-green px-4 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition ease-in-out duration-150">
@@ -133,4 +126,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default NavbarHome;

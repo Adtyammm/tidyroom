@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
-import logo from "../../assets/Group.png"; // Sesuaikan dengan path gambar ikon
+import logo from "../../assets/group.png"; // Sesuaikan dengan path gambar ikon
 
 const LoginChoice = () => {
   return (

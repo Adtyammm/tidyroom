@@ -2,6 +2,7 @@ import Navbar from "../../components/Navbar";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect } from "react";
+import NavbarHome from "../../components/NavbarHome";
 
 const Home = () => {
   useEffect(() => {
@@ -10,7 +11,7 @@ const Home = () => {
 
   return (
     <>
-      <Navbar />
+      <NavbarHome />
       <div className="bg-dark-green min-h-screen flex flex-col items-center">
         {/* Main Content Section */}
         <main className="flex flex-col items-center text-center mt-40 px-4">
