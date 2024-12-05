@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
-import logo from "../../assets/group.png"; // Sesuaikan dengan path gambar ikon
+import logo from "../../assets/tidy.png";
 
 const LoginChoice = () => {
   return (
@@ -42,10 +42,8 @@ const LoginChoice = () => {
         </Link>
       </div>
 
-      {/* Ikon sapu di bagian bawah */}
       <div className="mt-4">
         <span className="text-7xl">🧹</span>{" "}
-        {/* Ganti dengan ikon sapu yang sesuai */}
       </div>
     </div>
   );
