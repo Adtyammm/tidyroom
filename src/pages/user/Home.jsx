@@ -3,6 +3,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect } from "react";
 import NavbarHome from "../../components/NavbarHome";
+import tidy from "/src/assets/tidyroom.png";
 
 const Home = () => {
   useEffect(() => {
@@ -21,11 +22,7 @@ const Home = () => {
             data-aos-duration="2000"
             className="scale-150"
           >
-            <img
-              src="/src/assets/tidyroom.png" // Ganti dengan path ikon yang sesuai
-              alt="TinyRoom Icon"
-              className="rounded-full"
-            />
+            <img src={tidy} alt="TinyRoom Icon" className="rounded-full" />
           </div>
           <h1
             data-aos="fade-up"
