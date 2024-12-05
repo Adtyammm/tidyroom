@@ -3,7 +3,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect } from "react";
 import NavbarHome from "../../components/NavbarHome";
-import tidy from "/src/assets/tidyroom.png";
+import tidy from "../../assets/tidyroom.png";
 
 const Home = () => {
   useEffect(() => {
