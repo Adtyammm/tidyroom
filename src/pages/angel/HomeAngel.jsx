@@ -119,7 +119,6 @@ const HomeAngel = () => {
         setActiveWorks((prev) => prev.filter((b) => b.id !== booking.id));
         setActivity((prev) => [...prev, { ...booking, status: "accepted" }]);
       }
-      window.location.reload(), setAcceptedBooking(booking);
       setIsAcceptModalOpen(true);
     } catch (error) {
       console.error("Error accepting booking:", error);
